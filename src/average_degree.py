@@ -33,11 +33,33 @@ def featureTwo():
             time_stamp_key=time_stamp(month=created_at[4:7],day=created_at[8:10],second=seconds)
             tweet_dict.setdefault(time_stamp_key,[]).append(ht)
 
+    avgDict=avgDegree(tweet_dict)
+    # print avgDict
+    f.close()
+
+    q=open("../tweet_input/tweets.txt", "r")
+    for line in q:
+        if not line.startswith('{"l'):
+            json_str=json.loads(line)
+            created_at=json_str["created_at"].encode('ascii','ignore')
+
+            FMT="%H:%M:%S"
+            a=time.strptime(created_at[11:19],FMT)
+            seconds=datetime.timedelta(hours=a.tm_hour, minutes=a.tm_min, seconds=a.tm_sec).seconds
+
+            time_stamp=namedtuple("time_stamp",["month","day","second"])
+            time_stamp_key=time_stamp(month=created_at[4:7],day=created_at[8:10],second=seconds)
+            w.write(str(avgDict[time_stamp_key]))
+            w.write("\n")
+            # print avgDict[time_stamp_key]
+
+def avgDegree(tweet_dict):
     ordered_tweet_dict=collections.OrderedDict(sorted(tweet_dict.items()))
     cp_dict=ordered_tweet_dict
 
-
+    avg_dict={}
     for key in ordered_tweet_dict:
+        # print key
         original_graph={}
         original_graph=findingAllListInCurrentTimeStamp(ordered_tweet_dict,key,original_graph)
         new_list=[]
@@ -58,8 +80,8 @@ def featureTwo():
 
         number_of_graph_in_new_list = len(new_list)
         new_dict= defaultdict(list)
-        for key in original_graph.keys():
-            new_dict[key].append(original_graph[key])
+        for key_in_original_graph in original_graph.keys():
+            new_dict[key_in_original_graph].append(original_graph[key_in_original_graph])
         # defaultdict(<type 'list'>, {'News': [['Trump', 'Election']], 'IfIEverGetToCabo': [['IfIEverGetToCabo']],
         # 'Trump': [['Election', 'News']], 'Election': [['News', 'Trump']]})
 
@@ -70,26 +92,26 @@ def featureTwo():
         number_of_nodes_in_joined_graph = len(new_dict.keys())
 
         count=0
-        for key in new_dict:
-            l=len(new_dict[key])
+        for new_dict_key in new_dict:
+            l=len(new_dict[new_dict_key])
             li=[]
             for x in range (0,l):
-                if new_dict[key][x]==[key]:
+                if new_dict[new_dict_key][x]==[new_dict_key]:
                     count=count
                 else:
-                    li.extend(new_dict[key][x])
+                    li.extend(new_dict[new_dict_key][x])
 
             t=list(set(li))
             count=count+len(t)
 
         if (number_of_nodes_in_joined_graph==0):
-            w.write("0")
-            w.write("\n")
+            avg_degree=0
+            avg_dict[key]=avg_degree
         else:
             avg_degree=float(count)/number_of_nodes_in_joined_graph
-            w.write(str(avg_degree))
-            w.write("\n")
+            avg_dict[key]=avg_degree
 
+    return avg_dict
 
 
 
